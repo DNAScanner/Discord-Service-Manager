@@ -2,6 +2,8 @@
 
 This is a [Deno](https://deno.com) script, which allows you to manage the services on your Linux machine with ease
 
+⚠️ **Note:** This script is required to be run as root, as it uses `systemctl` to manage the services
+
 ## Screenshots
 
 ![alt text](docs/1.svg)
