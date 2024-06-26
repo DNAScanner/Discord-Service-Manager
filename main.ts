@@ -43,11 +43,6 @@ client.on(Events.ClientReady, (client) => {
 								.setName("service")
 								.setDescription("The service to manage")
 								.setRequired(true)
-						)
-						.addBooleanOption((option) =>
-							option //
-								.setName("public")
-								.setDescription("Show the panel to everyone")
 						),
 				],
 			});
@@ -67,9 +62,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
 	switch (commandName) {
 		case "service": {
 			const serviceName = interaction.options.get("service")?.value as string;
-			const isPublic = interaction.options.get("public")?.value as boolean;
 
-			await interaction.reply({ephemeral: !isPublic, content: `### Loading data for service \`${serviceName}\``});
+			if (interaction.user.id !== env.ALLOWED_USER) {
+				await interaction.reply({ephemeral: true, content: "You are not allowed to use this command"});
+				break;
+			}
+
+			await interaction.reply({content: `### Loading data for service \`${serviceName}\``});
 
 			while (true) {
 				const status = await service.getStatus(serviceName);
@@ -93,14 +92,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
 									.setCustomId("update")
 							)
 							.addComponents(
-								isPublic
-									? [
-											new ButtonBuilder() // Dismiss
-												.setStyle(ButtonStyle.Secondary)
-												.setLabel("Dismiss")
-												.setCustomId("dismiss"),
-									  ]
-									: []
+								new ButtonBuilder() // Dismiss
+									.setStyle(ButtonStyle.Secondary)
+									.setLabel("Dismiss")
+									.setCustomId("dismiss")
 							),
 
 						new ActionRowBuilder() //
@@ -178,7 +173,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 					if (exit) break;
 				} catch (error) {
-					await interaction.editReply({content: "```ts\n" + error + "\n```"});
+					try {
+						await interaction.editReply({content: "```ts\n" + error + "\n```"});
+					} catch {
+						null;
+					}
 					break;
 				}
 			}
