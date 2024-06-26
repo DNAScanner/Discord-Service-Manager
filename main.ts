@@ -61,128 +61,128 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 	switch (commandName) {
 		case "service": {
-			const serviceName = interaction.options.get("service")?.value as string;
+			try {
+				const serviceName = interaction.options.get("service")?.value as string;
 
-			if (interaction.user.id !== env.ALLOWED_USER) {
-				await interaction.reply({ephemeral: true, content: "You are not allowed to use this command"});
-				break;
-			}
-
-			await interaction.reply({content: `### Loading data for service \`${serviceName}\``});
-
-			while (true) {
-				const status = await service.getStatus(serviceName);
-
-				if (status === "Service not found") {
-					await interaction.editReply({content: `### Service \`${serviceName}\` not found`});
+				if (interaction.user.id !== env.ALLOWED_USER) {
+					await interaction.reply({ephemeral: true, content: "You are not allowed to use this command"});
 					break;
 				}
 
-				const serviceActive = status.includes("Active: active");
+				await interaction.reply({content: `### Loading data for service \`${serviceName}\``});
 
-				const response = await interaction.editReply({
-					content: `### ${serviceActive ? "🟢" : "🔴"} Managing Service \`${serviceName}\`\n\n\`\`\`\n` + status + "\n```",
-					components: [
-						//
-						new ActionRowBuilder() //
-							.addComponents(
-								new ButtonBuilder() // Update status
-									.setStyle(ButtonStyle.Primary)
-									.setLabel("Update Status")
-									.setCustomId("update")
-							)
-							.addComponents(
-								new ButtonBuilder() // Dismiss
-									.setStyle(ButtonStyle.Secondary)
-									.setLabel("Dismiss")
-									.setCustomId("dismiss")
-							),
+				while (true) {
+					const status = await service.getStatus(serviceName);
 
-						new ActionRowBuilder() //
-							.addComponents(
-								//
-								new ButtonBuilder() // Start
-									.setStyle(ButtonStyle.Success)
-									.setLabel("Start")
-									.setCustomId("start")
-									.setDisabled(serviceActive),
-
-								new ButtonBuilder() // Stop
-									.setStyle(ButtonStyle.Danger)
-									.setLabel("Stop")
-									.setCustomId("stop")
-									.setDisabled(!serviceActive),
-
-								new ButtonBuilder() // Restart
-									.setStyle(ButtonStyle.Primary)
-									.setLabel("Restart")
-									.setCustomId("restart")
-									.setDisabled(!serviceActive)
-							),
-					],
-				});
-
-				// deno-lint-ignore no-explicit-any
-				const filter = (i: any) => i.user.id === interaction.user.id;
-
-				// Wait for user input
-				try {
-					const choice = (await response.awaitMessageComponent({
-						filter,
-						time: 300000,
-					})) as AwaitMessageComponentResult;
-
-					await choice.deferUpdate();
-
-					let exit = false;
-
-					switch (choice.customId) {
-						case "update": {
-							break;
-						}
-
-						case "dismiss": {
-							await interaction.deleteReply();
-							exit = true;
-							break;
-						}
-
-						case "start": {
-							await interaction.editReply({content: `### Starting service \`${serviceName}\`...`});
-							await service.start(serviceName);
-							break;
-						}
-
-						case "stop": {
-							await interaction.editReply({content: `### Stopping service \`${serviceName}\`...`});
-							await service.stop(serviceName);
-							break;
-						}
-
-						case "restart": {
-							await interaction.editReply({content: `### Restarting service \`${serviceName}\`...`});
-							await service.restart(serviceName);
-							break;
-						}
-
-						default: {
-							await interaction.editReply({content: choice.customId + " is not handled yet"});
-							break;
-						}
+					if (status === "Service not found") {
+						await interaction.editReply({content: `### Service \`${serviceName}\` not found`});
+						break;
 					}
 
-					if (exit) break;
-				} catch (error) {
+					const serviceActive = status.includes("Active: active");
+
+					const response = await interaction.editReply({
+						content: `### ${serviceActive ? "🟢" : "🔴"} Managing Service \`${serviceName}\`\n\n\`\`\`\n` + status + "\n```",
+						components: [
+							//
+							new ActionRowBuilder() //
+								.addComponents(
+									new ButtonBuilder() // Update status
+										.setStyle(ButtonStyle.Primary)
+										.setLabel("Update Status")
+										.setCustomId("update")
+								)
+								.addComponents(
+									new ButtonBuilder() // Dismiss
+										.setStyle(ButtonStyle.Secondary)
+										.setLabel("Dismiss")
+										.setCustomId("dismiss")
+								),
+
+							new ActionRowBuilder() //
+								.addComponents(
+									//
+									new ButtonBuilder() // Start
+										.setStyle(ButtonStyle.Success)
+										.setLabel("Start")
+										.setCustomId("start")
+										.setDisabled(serviceActive),
+
+									new ButtonBuilder() // Stop
+										.setStyle(ButtonStyle.Danger)
+										.setLabel("Stop")
+										.setCustomId("stop")
+										.setDisabled(!serviceActive),
+
+									new ButtonBuilder() // Restart
+										.setStyle(ButtonStyle.Primary)
+										.setLabel("Restart")
+										.setCustomId("restart")
+										.setDisabled(!serviceActive)
+								),
+						],
+					});
+
+					// deno-lint-ignore no-explicit-any
+					const filter = (i: any) => i.user.id === interaction.user.id;
+
+					// Wait for user input
 					try {
-						await interaction.editReply({content: "```ts\n" + error + "\n```"});
-					} catch {
-						null;
-					}
-					break;
-				}
-			}
+						const choice = (await response.awaitMessageComponent({
+							filter,
+							time: 300000,
+						})) as AwaitMessageComponentResult;
 
-			break;
+						await choice.deferUpdate();
+
+						let exit = false;
+
+						switch (choice.customId) {
+							case "update": {
+								break;
+							}
+
+							case "dismiss": {
+								await interaction.deleteReply();
+								exit = true;
+								break;
+							}
+
+							case "start": {
+								await interaction.editReply({content: `### Starting service \`${serviceName}\`...`});
+								await service.start(serviceName);
+								break;
+							}
+
+							case "stop": {
+								await interaction.editReply({content: `### Stopping service \`${serviceName}\`...`});
+								await service.stop(serviceName);
+								break;
+							}
+
+							case "restart": {
+								await interaction.editReply({content: `### Restarting service \`${serviceName}\`...`});
+								await service.restart(serviceName);
+								break;
+							}
+
+							default: {
+								await interaction.editReply({content: choice.customId + " is not handled yet"});
+								break;
+							}
+						}
+
+						if (exit) break;
+					} catch (error) {
+						await interaction.editReply({content: "```ts\n" + error + "\n```"});
+						break;
+					}
+				}
+
+				break;
+			} catch {
+				null;
+			}
 		}
 	}
 });
