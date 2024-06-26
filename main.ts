@@ -69,15 +69,17 @@ client.on(Events.InteractionCreate, async (interaction) => {
 					break;
 				}
 
+				const status = await service.getStatus(serviceName);
+
+				if (status === "Service not found") {
+					await interaction.reply({ephemeral: true, content: `### Service \`${serviceName}\` not found`});
+					break;
+				}
+
 				await interaction.reply({content: `### Loading data for service \`${serviceName}\``});
 
 				while (true) {
 					const status = await service.getStatus(serviceName);
-
-					if (status === "Service not found") {
-						await interaction.editReply({content: `### Service \`${serviceName}\` not found`});
-						break;
-					}
 
 					const serviceActive = status.includes("Active: active");
 
